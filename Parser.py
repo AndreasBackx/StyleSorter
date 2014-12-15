@@ -101,6 +101,7 @@ class Parser:
 							multilineComment = True
 				# If an attribute is being set (e.g: "height:") it must be considered as so
 				# if in SCSS &:hover is being used, it must be considered as one key
+				# TODO: Support for ::
 				elif char == ':' and index > 0 and style[index-1] != '&':
 					if isKey:
 						isKey = False
@@ -147,11 +148,15 @@ class Parser:
 		Format the completely parsed list to a string.
 		'''
 		ordered = self.order(parsed) if depth == 0 else parsed
+
 		previousEndLineNumber = 0
+
 		result = ""
 		indent = ""
+
 		for d in range(depth):
 			indent += "\t"
+
 		for line in ordered:
 			currentLineNumber = line[2]
 			currentEndLineNumber = line[3]
