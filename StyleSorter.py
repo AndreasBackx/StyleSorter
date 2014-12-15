@@ -9,7 +9,16 @@ class SortCommand(sublime_plugin.TextCommand):
 		parsed = self.scssToDict(lines)
 		print(json.dumps(parsed, indent=4))
 
-	def scssToDict(self, scss):
+	def addResult(self, result, lineLengths, lastLine, end, key, value='', originalValue=''):
+		start = end - len(key) - len(value) - len(originalValue) + 1
+		lastIndex = len(lineLengths) - 1
+		lineNumber = lastLine
+		while lastIndex > lineNumber and lineLengths[lineNumber] <= start:
+			lineNumber += 1
+		result[key] = [lineNumber, value]
+		return (result, lineNumber,)
+
+	def scssToDict(self, style):
 		result = {}
 		part = ''
 		previousPart = ''
@@ -17,37 +26,38 @@ class SortCommand(sublime_plugin.TextCommand):
 		isKey = True
 		reset = False
 		depth = 0
+		lastLine = 0
 
 		lineComment = False
 		multilineComment = False
 		endlineComment = False
 
-		length = len(scss)
+		lineLengths = []
+		lines = style.split('\n')
 
-		for index, char in enumerate(scss):
+		for key, line in enumerate(lines):
+			lineLengths.append(len(line) + 1 if key == 0 else len(line) + lineLengths[key - 1] + 1)
+
+		lineLengths[len(lineLengths) - 1] -= 1
+		length = lineLengths[len(lineLengths) - 1]
+
+		for index, char in enumerate(style):
 			if depth == 0:
 				if lineComment or multilineComment or endlineComment:
-					if lineComment:
-						if char == '\n':
-							result[part] = char
-							lineComment = False
-							reset = True
-						else:
-							pass
-					elif multilineComment:
-						if length > index + 1:
-							nextChar = scss[index + 1]
-							if char == '*' and nextChar == '/':
-								endlineComment = True
-								multilineComment = False
-					else:
+					if lineComment and char == '\n':
+						(result, lastLine,) = self.addResult(result, lineLengths, lastLine, index, part, char)
+						lineComment = False
+						reset = True
+					elif endlineComment:
 						endlineComment = False
 						part += char
-						result[part] = None
-						print(part)
+						(result, lastLine,) = self.addResult(result, lineLengths, lastLine, index, part)
 						reset = True
+					elif multilineComment and length > index + 1 and char == '*' and style[index + 1] == '/':
+						endlineComment = True
+						multilineComment = False
 				elif char == '/' and length > index + 1:
-					nextChar = scss[index + 1]
+					nextChar = style[index + 1]
 					if nextChar == '/':
 						lineComment = True
 					elif nextChar == '*':
@@ -55,21 +65,21 @@ class SortCommand(sublime_plugin.TextCommand):
 					else:
 						# We want to remove this invalid /
 						continue
-				elif char == ':' and index > 0 and scss[index-1] != '&':
+				elif char == ':' and index > 0 and style[index-1] != '&':
 					if isKey:
 						isKey = False
-						result[part] = ''
+						(result, lastLine,) = self.addResult(result, lineLengths, lastLine, index, part)
 					reset = True
 				elif char == ';':
 					if isKey:
-						result[part] = None
+						(result, lastLine,) = self.addResult(result, lineLengths, lastLine, index, part)
 					else:
-						result[previousPart] = part
+						(result, lastLine,) = self.addResult(result, lineLengths, lastLine, index, previousPart, part)
 					reset = True
 				elif char == '{':
 					depth += 1
 					part = part.strip()
-					result[part] = {}
+					(result, lastLine,) = self.addResult(result, lineLengths, lastLine, index, part, {})
 					reset = True
 			elif char == '{':
 				depth += 1
@@ -77,14 +87,14 @@ class SortCommand(sublime_plugin.TextCommand):
 				depth -= 1
 				if depth == 0:
 					nestedScss = self.scssToDict(part)
-					result[previousPart] = nestedScss
+					(result, lastLine,) = self.addResult(result, lineLengths, lastLine, index, previousPart, nestedScss, part)
 					reset = True
 
 			if reset:
 				reset = False
 				previousPart = part
 				part = ''
-			elif char != '\n' and (part != '' or char != ' ') and (part != '' or char != '\t'):
+			elif (multilineComment or (depth > 0 and style[index - 1] != '{') or char != '\n') and (part != '' or char != ' ') and (part != '' or char != '\t'):
 				part += char
 
 		return result
