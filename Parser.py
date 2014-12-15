@@ -142,16 +142,19 @@ class Parser:
 
 		return result
 
-	def format(self, parsed, depth=0, originalLineNumber=0):
+	def format(self, parsed, depth=0):
+		'''
+		Format the completely parsed list to a string.
+		'''
 		ordered = self.order(parsed) if depth == 0 else parsed
-		previousEndLineNumber = originalLineNumber
+		previousEndLineNumber = 0
 		result = ""
 		indent = ""
 		for d in range(depth):
 			indent += "\t"
 		for line in ordered:
-			currentLineNumber = originalLineNumber + line[2]
-			currentEndLineNumber = originalLineNumber + line[3]
+			currentLineNumber = line[2]
+			currentEndLineNumber = line[3]
 			for missingBreakNumber in range(currentLineNumber - previousEndLineNumber):
 				result += "\n"
 			previousEndLineNumber = currentEndLineNumber
@@ -161,12 +164,15 @@ class Parser:
 				if type(attributeValue) is str:
 					result += ": " + attributeValue + ";"
 				elif type(attributeValue) is list:
-					result += " {\n" + self.format(attributeValue, depth + 1, currentEndLineNumber) + "\n" + indent + "}"
+					result += " {\n" + self.format(attributeValue, depth + 1) + "\n" + indent + "}"
 				else:
 					result += Parser.ADD[attributeValue]
 		return result
 
 	def order(self, parsed):
+		'''
+		Order the dictionary based on line number.
+		'''
 		result = []
 		for key, value in parsed.items():
 			lineNumber = value[0]
