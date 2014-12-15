@@ -126,3 +126,22 @@ class Parser:
 				part += char
 
 		return result
+
+	def format(self, parsed, depth=0):
+		pass
+
+	def order(self, parsed):
+		result = []
+		for key, value in parsed.items():
+			lineNumber = value[0]
+			content = self.order(value[1]) if type(value[1]) is dict else value[1]
+			line = [key, content, lineNumber]
+			for i, l in enumerate(result):
+				if l[2] >= lineNumber:
+					print("    " + str(l[2]) + " >= " + str(lineNumber))
+					result.insert(i, line)
+					break
+			else:
+				result.append(line)
+
+		return result
