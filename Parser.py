@@ -1,4 +1,13 @@
+import json
+
+
 class Parser:
+
+	NOTHING = 0
+	SEMICOLON = 1
+
+	ADD = ['', ';']
+
 	def __init__(self, lines):
 		self.lines = lines
 
@@ -6,19 +15,25 @@ class Parser:
 		'''
 		Format the result with the line and content.
 		'''
-		valueLength = 0 if value is None else len(value)
+		value = Parser.NOTHING if value is None else value
+		valueLength = 0 if type(value) is not str else len(value)
 		originalValueLength = 0 if originalValue is None else len(originalValue)
 
 		start = end - len(key) - valueLength - originalValueLength + 1
 
 		lastIndex = len(lineLengths) - 1
 		lineNumber = lastLine
+		endLineNumber = lastLine
 
 		# Get the original lineNumber (index starting from 0)
-		while lastIndex > lineNumber and lineLengths[lineNumber] <= start:
-			lineNumber += 1
+		while lastIndex > endLineNumber and lineLengths[endLineNumber] <= end:
+			if lineLengths[lineNumber] <= start:
+				lineNumber += 1
+				endLineNumber += 1
+			else:
+				endLineNumber += 1
 
-		result[key] = [lineNumber, value]
+		result[key] = [lineNumber, endLineNumber, value]
 		return (result, lineNumber,)
 
 	def parse(self, style=None):
@@ -94,7 +109,7 @@ class Parser:
 				elif char == ';':
 					# @imports, @extends, etc. are keys while attribute values are dict values
 					if isKey:
-						(result, lastLine,) = self.addResult(result, lineLengths, lastLine, index, part)
+						(result, lastLine,) = self.addResult(result, lineLengths, lastLine, index, part, Parser.SEMICOLON)
 					else:
 						(result, lastLine,) = self.addResult(result, lineLengths, lastLine, index, previousPart, part)
 						isKey = True
@@ -102,7 +117,7 @@ class Parser:
 				elif char == '{':
 					depth += 1
 					part = part.strip()
-					(result, lastLine,) = self.addResult(result, lineLengths, lastLine, index, part, {})
+					(result, lastLine,) = self.addResult(result, lineLengths, lastLine, index, part)
 					reset = True
 			# It's already adding the string for a recursive result, but we need to keep track where the current nesting ends
 			elif char == '{':
@@ -127,21 +142,41 @@ class Parser:
 
 		return result
 
-	def format(self, parsed, depth=0):
-		pass
+	def format(self, parsed, depth=0, originalLineNumber=0):
+		ordered = self.order(parsed) if depth == 0 else parsed
+		previousEndLineNumber = originalLineNumber
+		result = ""
+		indent = ""
+		for d in range(depth):
+			indent += "\t"
+		for line in ordered:
+			currentLineNumber = originalLineNumber + line[2]
+			currentEndLineNumber = originalLineNumber + line[3]
+			for missingBreakNumber in range(currentLineNumber - previousEndLineNumber):
+				result += "\n"
+			previousEndLineNumber = currentEndLineNumber
+			attributeValue = line[1]
+			result += indent + line[0]
+			if attributeValue is not None:
+				if type(attributeValue) is str:
+					result += ": " + attributeValue + ";"
+				elif type(attributeValue) is list:
+					result += " {\n" + self.format(attributeValue, depth + 1, currentEndLineNumber) + "\n" + indent + "}"
+				else:
+					result += Parser.ADD[attributeValue]
+		return result
 
 	def order(self, parsed):
 		result = []
 		for key, value in parsed.items():
 			lineNumber = value[0]
-			content = self.order(value[1]) if type(value[1]) is dict else value[1]
-			line = [key, content, lineNumber]
+			endLineNumber = value[1]
+			content = self.order(value[2]) if type(value[2]) is dict else value[2]
+			line = [key, content, lineNumber, endLineNumber]
 			for i, l in enumerate(result):
 				if l[2] >= lineNumber:
-					print("    " + str(l[2]) + " >= " + str(lineNumber))
 					result.insert(i, line)
 					break
 			else:
 				result.append(line)
-
 		return result
