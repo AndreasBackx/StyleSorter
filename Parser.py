@@ -1,4 +1,5 @@
 import json
+import copy
 
 
 class Parser:
@@ -8,8 +9,9 @@ class Parser:
 
 	ADD = ['', ';']
 
-	def __init__(self, lines):
+	def __init__(self, lines, ordering):
 		self.lines = lines
+		self.ordering = ordering
 
 	def addResult(self, result, lineLengths, lastLine, end, key, value=None, originalValue=None):
 		'''
@@ -176,18 +178,37 @@ class Parser:
 
 	def order(self, parsed):
 		'''
-		Order the dictionary based on line number.
+		Order the dictionary:
+			- Deeper nestings are kept in the same order
+			- The current attributes are moved towards the top
 		'''
-		result = []
+		nestings = []
+		attributes = []
+
 		for key, value in parsed.items():
 			lineNumber = value[0]
 			endLineNumber = value[1]
 			content = self.order(value[2]) if type(value[2]) is dict else value[2]
 			line = [key, content, lineNumber, endLineNumber]
-			for i, l in enumerate(result):
-				if l[2] >= lineNumber:
-					result.insert(i, line)
-					break
+			# If the content is a string, it's an attribute
+			if type(content) is str:
+				# We want to get the importance of attributes and later sort them based on those
+				for orderNumber, order in enumerate(self.ordering):
+					try:
+						index = order.index(key)
+						line.append([orderNumber, index])
+						break
+					except:
+						pass
+				attributes.append(line)
 			else:
-				result.append(line)
-		return result
+				# It's not attribute, we want to keep the original order the nestings were in -> order on line number.
+				for i, l in enumerate(nestings):
+					if l[2] >= lineNumber:
+						nestings.insert(i, line)
+						break
+				else:
+					nestings.append(line)
+
+		# sorted() sorts the attributes based on their importance (index and orderNumber)
+		return sorted(attributes, key=lambda x: x[4]) + nestings

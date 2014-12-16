@@ -1,7 +1,7 @@
 {
 	// How to order
-	"ordering": {
-		"positioning": [
+	"ordering": [
+		[
 			"position",
 			"display",
 			"float",
@@ -12,8 +12,7 @@
 			"clear",
 			"vertical-align",
 			"z-index"
-		],
-		"display": [
+		], [
 			"height",
 			"max-height",
 			"min-height",
@@ -77,8 +76,7 @@
 			"outline-offset",
 			"outline-style",
 			"outline-width"
-		],
-		"looks": [
+		], [
 			"background",
 			"background-blend-mode",
 			"background-clip",
@@ -89,8 +87,7 @@
 			"background-repeat",
 			"background-size",
 			"box-shadow"
-		],
-		"text": [
+		], [
 			"color",
 			"font",
 			"font-family",
@@ -144,8 +141,7 @@
 			"word-spacing",
 			"word-wrap",
 			"content"
-		],
-		"animation": [
+		], [
 			"-webkit-animation",
 			"animation",
 			"-webkit-animation-delay",
@@ -181,5 +177,5 @@
 			"-webkit-backface-visibility",
 			"backface-visibility"
 		]
-	}
+	]
 }
