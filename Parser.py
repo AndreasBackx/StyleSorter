@@ -1,7 +1,3 @@
-import json
-import copy
-
-
 class Parser:
 
 	NOTHING = 0
@@ -183,6 +179,7 @@ class Parser:
 			- The current attributes are moved towards the top
 		'''
 		nestings = []
+		sass = []
 		attributes = []
 
 		for key, value in parsed.items():
@@ -202,13 +199,14 @@ class Parser:
 						pass
 				attributes.append(line)
 			else:
-				# It's not attribute, we want to keep the original order the nestings were in -> order on line number.
-				for i, l in enumerate(nestings):
+				# It's not attribute, we want to keep the original order -> order on line number.
+				selectedList = sass if line[0][0] in ['$', '@'] else nestings
+				for i, l in enumerate(selectedList):
 					if l[2] >= lineNumber:
-						nestings.insert(i, line)
+						selectedList.insert(i, line)
 						break
 				else:
-					nestings.append(line)
+					selectedList.append(line)
 
 		# sorted() sorts the attributes based on their importance (index and orderNumber)
-		return sorted(attributes, key=lambda x: x[4]) + nestings
+		return sass + sorted(attributes, key=lambda x: x[4]) + nestings
