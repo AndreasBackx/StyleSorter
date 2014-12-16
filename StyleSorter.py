@@ -4,15 +4,15 @@ from StyleSorter.Parser import Parser
 from time import sleep
 
 
-class SortCommand(sublime_plugin.TextCommand):
+class StyleSorterSortCommand(sublime_plugin.TextCommand):
 
 	NAME = 'StyleSorter'
 
 	def run(self, edit):
-		settings = sublime.load_settings(SortCommand.NAME + '.sublime-settings')
+		settings = sublime.load_settings(self.NAME + '.sublime-settings')
 		ordering = settings.get('ordering')
 
-		self.view.set_status(SortCommand.NAME, 'Parsing stylesheet')
+		self.view.set_status(self.NAME, 'Parsing stylesheet')
 		region = sublime.Region(0, self.view.size())
 		text = self.view.substr(region)
 		thread = Parser(text, ordering)
@@ -25,10 +25,10 @@ class SortCommand(sublime_plugin.TextCommand):
 		self.updateFile(thread.result, edit, region)
 
 	def updateFile(self, formatted, edit, region):
-		self.view.set_status(SortCommand.NAME, 'Updating stylesheet')
+		self.view.set_status(self.NAME, 'Updating stylesheet')
 		self.view.replace(edit, region, formatted)
-		self.view.erase_status(SortCommand.NAME)
-		sublime.status_message(SortCommand.NAME + ' successfully sorted your stylesheet.')
+		self.view.erase_status(self.NAME)
+		sublime.status_message(self.NAME + ' successfully sorted your stylesheet.')
 
 	def description(self):
 		return 'Super CSS sorter.'

@@ -3,3 +3,4 @@
 *.sublime-workspace
 *.scss
 indexlist.txt
+package-metadata.json
