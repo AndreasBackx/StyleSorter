@@ -11,7 +11,7 @@ class SortCommand(sublime_plugin.TextCommand):
 		parser = Parser(lines, ordering)
 		parsed = parser.parse()
 		formatted = parser.format(parsed)
-		#print(formatted)
+		print(formatted)
 
 	def description(self):
 		return 'Super CSS sorter.'

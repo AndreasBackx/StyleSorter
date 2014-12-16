@@ -147,30 +147,34 @@ class Parser:
 		'''
 		ordered = self.order(parsed) if depth == 0 else parsed
 
-		previousEndLineNumber = 0
-
 		result = ""
 		indent = ""
 
 		for d in range(depth):
 			indent += "\t"
 
-		for line in ordered:
-			currentLineNumber = line[2]
-			currentEndLineNumber = line[3]
-			for missingBreakNumber in range(currentLineNumber - previousEndLineNumber):
-				result += "\n"
-			previousEndLineNumber = currentEndLineNumber
+		for i, line in enumerate(ordered):
 			attributeValue = line[1]
-			result += indent + line[0]
+			if i > 0:
+				previousLine = ordered[i - 1]
+				# '\n' after @' or '$'
+				# '\n' before beginning a new attribute type
+				# '\n' before first nesting
+				if (len(previousLine) <= 4 and len(line) > 4)\
+					or (len(previousLine) > 4 and len(line) > 4 and previousLine[4][0] < line[4][0])\
+					or (len(previousLine) > 4 and len(line) <= 4):
+					result += "\n"
+
+			result += "\n" + indent + line[0]
 			if attributeValue is not None:
 				if type(attributeValue) is str:
 					result += ": " + attributeValue + ";"
 				elif type(attributeValue) is list:
 					result += " {\n" + self.format(attributeValue, depth + 1) + "\n" + indent + "}"
+					result += "\n" if i != len(ordered) - 1 else ""
 				else:
 					result += Parser.ADD[attributeValue]
-		return result
+		return result[1:]  # Strip the first '\n'
 
 	def order(self, parsed):
 		'''
