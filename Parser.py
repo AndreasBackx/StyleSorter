@@ -8,15 +8,16 @@ class Parser(threading.Thread):
 
 	ADD = ['', ';']
 
-	def __init__(self, lines, ordering):
+	def __init__(self, lines, ordering, callback):
 		self.lines = lines
 		self.ordering = ordering
 		self.result = None
+		self.callback = callback
 		super().__init__()
 
 	def run(self):
 		parsed = self.parse()
-		self.result = self.format(parsed)
+		self.callback(self.format(parsed))
 
 	def addResult(self, result, lineLengths, lastLine, end, key, value=None, originalValue=None):
 		'''
