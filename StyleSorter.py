@@ -22,7 +22,15 @@ class StyleSorterSortCommand(sublime_plugin.TextCommand):
 		sel = self.view.sel()
 		sel.clear()
 		sel.add(self.region)
-		self.view.run_command('insert', {'characters': formatted})
+		self.save(formatted)
 
 		self.view.erase_status(self.NAME)
 		sublime.status_message(self.NAME + ' successfully sorted your stylesheet.')
+
+	def save(self, text):
+		auto_indent = self.view.settings().get('auto_indent')
+		if auto_indent:
+			self.view.settings().set('auto_indent', False)
+		self.view.run_command('insert', {'characters': text})
+		if auto_indent:
+			self.view.settings().set('auto_indent', True)
