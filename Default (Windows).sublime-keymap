@@ -1,0 +1,5 @@
+[
+	{
+		"keys": ["ctrl+s", "ctrl+t"], "command": "style_sorter_sort"
+	}
+]
