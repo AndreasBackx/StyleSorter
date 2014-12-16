@@ -204,17 +204,20 @@ class Parser(threading.Thread):
 			# If the content is a string, it's an attribute
 			if type(content) is str:
 				# We want to get the importance of attributes and later sort them based on those
-				for orderNumber, order in enumerate(self.ordering):
-					try:
-						index = order.index(key)
-						line.append([orderNumber, index])
-						break
-					except:
-						pass
-				attributes.append(line)
+				if line[0][0] == '$':
+					sass.append(line)
+				else:
+					for orderNumber, order in enumerate(self.ordering):
+						try:
+							index = order.index(key)
+							line.append([orderNumber, index])
+							break
+						except:
+							pass
+					attributes.append(line)
 			else:
 				# It's not attribute, we want to keep the original order -> order on line number.
-				selectedList = sass if line[0][0] in ['$', '@'] else nestings
+				selectedList = sass if line[0][0] == '@' else nestings
 				for i, l in enumerate(selectedList):
 					if l[2] >= lineNumber:
 						selectedList.insert(i, line)
