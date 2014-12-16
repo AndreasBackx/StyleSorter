@@ -1,13 +1,23 @@
-class Parser:
+import threading
+
+
+class Parser(threading.Thread):
 
 	NOTHING = 0
 	SEMICOLON = 1
 
 	ADD = ['', ';']
 
-	def __init__(self, lines, ordering):
+	def __init__(self, lines, ordering, callback):
 		self.lines = lines
 		self.ordering = ordering
+		self.callback = callback
+		self.result = None
+		super().__init__()
+
+	def run(self):
+		parsed = self.parse()
+		self.callback(self.format(parsed))
 
 	def addResult(self, result, lineLengths, lastLine, end, key, value=None, originalValue=None):
 		'''
