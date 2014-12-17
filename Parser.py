@@ -1,5 +1,4 @@
 import threading
-import json
 
 
 class Parser(threading.Thread):
@@ -77,7 +76,7 @@ class Parser(threading.Thread):
 		# This indicates the end of a multi line comment
 		endlineComment = False
 
- 		# A nesting with a double colon is being parsed
+		# A nesting with a double colon is being parsed
 		doubleColon = False
 
 		lineLengths = []

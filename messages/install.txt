@@ -1,0 +1,15 @@
+███████╗████████╗██╗   ██╗██╗     ███████╗███████╗ ██████╗ ██████╗ ████████╗███████╗██████╗
+██╔════╝╚══██╔══╝╚██╗ ██╔╝██║     ██╔════╝██╔════╝██╔═══██╗██╔══██╗╚══██╔══╝██╔════╝██╔══██╗
+███████╗   ██║    ╚████╔╝ ██║     █████╗  ███████╗██║   ██║██████╔╝   ██║   █████╗  ██████╔╝
+╚════██║   ██║     ╚██╔╝  ██║     ██╔══╝  ╚════██║██║   ██║██╔══██╗   ██║   ██╔══╝  ██╔══██╗
+███████║   ██║      ██║   ███████╗███████╗███████║╚██████╔╝██║  ██║   ██║   ███████╗██║  ██║
+╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚══════╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚══════╝╚═╝  ╚═╝
+
+Thank you for downloading StyleSorter, a CSS and SCSS attribute type sorter for Sublime Text 3.
+
+
+## Usage
+In the command palette search for StyleSorter and press enter to sort your file.
+
+
+Please report any bug or failed sorting at: https://github.com/AndreasBackx/StyleSorter/issues
