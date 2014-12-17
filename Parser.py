@@ -77,6 +77,9 @@ class Parser(threading.Thread):
 		# This indicates the end of a multi line comment
 		endlineComment = False
 
+ 		# A nesting with a double colon is being parsed
+		doubleColon = False
+
 		lineLengths = []
 		lines = style.split('\n')
 
@@ -115,12 +118,14 @@ class Parser(threading.Thread):
 							multilineComment = True
 				# If an attribute is being set (e.g: 'height:') it must be considered as so
 				# if in SCSS &:hover is being used, it must be considered as one key
-				# TODO: Support for ::
-				elif char == ':' and index > 0 and style[index-1] != '&':
-					if isKey:
-						isKey = False
-						(result, lastLine,) = self.addResult(result, lineLengths, lastLine, index, part)
-					reset = True
+				elif char == ':' and index > 0 and style[index - 1] != '&' and not doubleColon:
+					if style[index + 1] == ':' or style[index - 1] == ':':
+						doubleColon = True
+					else:
+						if isKey:
+							isKey = False
+							(result, lastLine,) = self.addResult(result, lineLengths, lastLine, index, part)
+						reset = True
 				elif char == ';':
 					# @imports, @extends, etc. are keys while attribute values are dict values
 					if isKey:
@@ -130,6 +135,7 @@ class Parser(threading.Thread):
 						isKey = True
 					reset = True
 				elif char == '{':
+					doubleColon = False
 					depth += 1
 					part = part.strip()
 					(result, lastLine,) = self.addResult(result, lineLengths, lastLine, index, part)
