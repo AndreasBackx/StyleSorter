@@ -108,7 +108,7 @@ class Parser(threading.Thread):
 						# If the next char is '*' it means a multi line comment is starting (/*)
 						elif nextChar == '*':
 							multilineComment = True
-				# If an attribute is being set (e.g: "height:") it must be considered as so
+				# If an attribute is being set (e.g: 'height:') it must be considered as so
 				# if in SCSS &:hover is being used, it must be considered as one key
 				# TODO: Support for ::
 				elif char == ':' and index > 0 and style[index-1] != '&':
@@ -158,31 +158,52 @@ class Parser(threading.Thread):
 		'''
 		ordered = self.order(parsed) if depth == 0 else parsed
 
-		result = ""
-		indent = ""
+		if depth == 0:
+			print(json.dumps(ordered, indent=4))
+
+		result = ''
+		indent = ''
 
 		for d in range(depth):
-			indent += "\t"
+			indent += '\t'
 
 		for i, line in enumerate(ordered):
 			attributeValue = line[1]
+			length = len(line)
+			lastValue = line[length - 1]
+			hasComment = type(lastValue) is list and len(lastValue) > 2
 			if i > 0:
 				previousLine = ordered[i - 1]
+				previousLength = len(previousLine)
+				lastPreviousValue = previousLine[previousLength - 1]
+
+				previousHadComment = type(lastPreviousValue) is list and len(lastPreviousValue) > 2
+				previousIsSass = previousLength <= (5 if previousHadComment else 4)
+
+				previousIsAttribute = previousLength > 4 and len(previousLine[4]) == 2
+				currentIsAttribute = length > 4 and len(line[4]) == 2
+
+				currentIsNesting = type(line[1]) is list
+				previousIsNesting = type(previousLine[1]) is list
+
 				# '\n' after @' or '$'
 				# '\n' before beginning a new attribute type
 				# '\n' before first nesting
-				if (len(previousLine) <= 4 and len(line) > 4)\
-					or (len(previousLine) > 4 and len(line) > 4 and previousLine[4][0] < line[4][0])\
-					or (len(previousLine) > 4 and len(line) <= 4):
-					result += "\n"
-
-			result += "\n" + indent + line[0]
+				if previousIsSass and currentIsAttribute\
+					or previousIsAttribute and currentIsAttribute and previousLine[4][0] < line[4][0]\
+					or currentIsNesting and not previousIsNesting:
+					result += '\n'
+			if hasComment:
+				comment = lastValue
+				newLine = '\n' + indent
+				result += newLine + (newLine.join(comment[0]) if type(comment[0]) is list else comment[0])
+			result += ('\n' + indent) + line[0]
 			if attributeValue is not None:
 				if type(attributeValue) is str:
-					result += ": " + attributeValue + ";"
+					result += ': ' + attributeValue + ';'
 				elif type(attributeValue) is list:
-					result += " {\n" + self.format(attributeValue, depth + 1) + "\n" + indent + "}"
-					result += "\n" if i != len(ordered) - 1 else ""
+					result += ' {\n' + self.format(attributeValue, depth + 1) + '\n' + indent + '}'
+					result += '\n' if i != len(ordered) - 1 else ''
 				else:
 					result += Parser.ADD[attributeValue]
 		return result[1:]  # Strip the first '\n'
@@ -231,13 +252,16 @@ class Parser(threading.Thread):
 					else:
 						selectedList.append(line)
 
+		# sorted() sorts the attributes based on their importance (index and orderNumber)
 		ordered = sass + sorted(attributes, key=lambda x: x[4]) + nestings
 		self.linkComments(comments, ordered)
 
-		# sorted() sorts the attributes based on their importance (index and orderNumber)
 		return ordered
 
 	def linkComments(self, comments, ordered):
+		'''
+		Link comments to their respective attribute, other comment or other (s)css object.
+		'''
 		comments = sorted(comments, key=lambda x: x[2])
 
 		for c in range(len(comments) - 1, -1, -1):
@@ -251,8 +275,11 @@ class Parser(threading.Thread):
 				# The current comment is linked to the next one
 				if currentStart - 1 <= previousEnd <= currentStart:
 					addComment = comments.pop(c)
-					previousComment[0] += '\n' if currentStart - 1 == previousEnd else ''
-					previousComment[0] += addComment[0]
+					previousComment[0] = [previousComment[0]] if type(previousComment[0]) is str else previousComment[0]
+					if currentStart - 1 == previousEnd:
+						previousComment[0].append(addComment[0])
+					else:
+						previousComment[0].append(previousComment[0].pop() + addComment[0])
 					previousComment[3] = addComment[3]
 					continue
 			comments[c] = comment
@@ -268,5 +295,3 @@ class Parser(threading.Thread):
 						comment = comments.pop(c)
 						order.append(comment)
 						break
-
-		print(json.dumps(ordered, indent=4))
