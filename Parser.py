@@ -182,6 +182,7 @@ class Parser(threading.Thread):
 
 				previousIsAttribute = previousLength > 4 and len(previousLine[4]) == 2
 				currentIsAttribute = length > 4 and len(line[4]) == 2
+				startNewIndex = previousLine[4][0] < line[4][0]
 
 				currentIsNesting = type(line[1]) is list
 				previousIsNesting = type(previousLine[1]) is list
@@ -190,7 +191,7 @@ class Parser(threading.Thread):
 				# '\n' before beginning a new attribute type
 				# '\n' before first nesting
 				if previousIsSass and currentIsAttribute\
-					or previousIsAttribute and currentIsAttribute and previousLine[4][0] < line[4][0]\
+					or previousIsAttribute and currentIsAttribute and startNewIndex\
 					or currentIsNesting and not previousIsNesting:
 					result += '\n'
 			if hasComment:
