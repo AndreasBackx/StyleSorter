@@ -1,6 +1,7 @@
 import sublime
 import sublime_plugin
 from StyleSorter.Parser import Parser
+import sys
 
 
 class StyleSorterSortCommand(sublime_plugin.TextCommand):
@@ -54,6 +55,7 @@ class StyleSorterSortCommand(sublime_plugin.TextCommand):
 
 		self.view.erase_status(self.NAME)
 		sublime.status_message(self.NAME + ' successfully sorted your stylesheet.')
+		sys.stdout.flush()
 
 	def save(self, text):
 		auto_indent = self.view.settings().get('auto_indent', False)

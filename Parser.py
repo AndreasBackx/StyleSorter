@@ -1,4 +1,6 @@
 import threading
+import copy
+import json
 
 
 class Parser(threading.Thread):
@@ -195,6 +197,7 @@ class Parser(threading.Thread):
 		nestings = []
 		sass = []
 		attributes = []
+		comments = []
 
 		for key, value in parsed.items():
 			lineNumber = value[0]
@@ -216,14 +219,56 @@ class Parser(threading.Thread):
 							pass
 					attributes.append(line)
 			else:
-				# It's not attribute, we want to keep the original order -> order on line number.
-				selectedList = sass if line[0][0] == '@' else nestings
-				for i, l in enumerate(selectedList):
-					if l[2] >= lineNumber:
-						selectedList.insert(i, line)
-						break
+				if len(line[0]) > 1 and line[0][0] == '/' and (line[0][1] == '/' or line[0][1] == '*'):
+					# It's a comment, we want to link it to another comment, attribute or whatever
+					comments.append(line)
 				else:
-					selectedList.append(line)
+					# It's not an attribute, we want to keep the original order -> order on line number.
+					selectedList = sass if line[0][0] == '@' else nestings
+					for i, l in enumerate(selectedList):
+						if l[2] >= lineNumber:
+							selectedList.insert(i, line)
+							break
+					else:
+						selectedList.append(line)
+
+		ordered = sass + sorted(attributes, key=lambda x: x[4]) + nestings
+		self.linkComments(comments, ordered)
 
 		# sorted() sorts the attributes based on their importance (index and orderNumber)
-		return sass + sorted(attributes, key=lambda x: x[4]) + nestings
+		return ordered
+
+	def linkComments(self, comments, ordered):
+		sortedComments = sorted(comments, key=lambda x: x[2])
+		resultComments = copy.deepcopy(sortedComments)
+
+		for c in range(len(sortedComments) - 1, -1, -1):
+			comment = sortedComments[c]
+			if c > 0:
+				previousComment = sortedComments[c - 1]
+
+				previousEnd = previousComment[3]
+				currentStart = comment[2]
+
+				# The current comment is linked to the next one
+				if currentStart - 1 <= previousEnd <= currentStart:
+					addComment = resultComments.pop(c)
+					previousComment[0] += '\n' if currentStart - 1 == previousEnd else ''
+					previousComment[0] += addComment[0]
+					previousComment[3] = addComment[3]
+					continue
+			resultComments[c] = comment
+
+		for o in range(len(ordered) - 1, -1, -1):
+			order = ordered[o]
+			if o > 0:
+				orderStart = order[2]
+				for c in range(len(resultComments) - 1, -1, -1):
+					comment = resultComments[c]
+					commentEnd = comment[3]
+					if orderStart - 1 <= commentEnd <= orderStart:
+						comment = resultComments.pop(c)
+						order.append(comment)
+						break
+
+		print(json.dumps(ordered, indent=4))
