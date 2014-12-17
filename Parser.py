@@ -156,6 +156,7 @@ class Parser(threading.Thread):
 		'''
 		Format the completely parsed list to a string.
 		'''
+		# self.order() orders recursively so if the depth > 0, the parsed data is already ordered
 		ordered = self.order(parsed) if depth == 0 else parsed
 
 		if depth == 0:
@@ -166,6 +167,7 @@ class Parser(threading.Thread):
 
 		for d in range(depth):
 			indent += '\t'
+		newLine = '\n' + indent
 
 		for i, line in enumerate(ordered):
 			attributeValue = line[1]
@@ -182,7 +184,6 @@ class Parser(threading.Thread):
 
 				previousIsAttribute = previousLength > 4 and len(previousLine[4]) == 2
 				currentIsAttribute = length > 4 and len(line[4]) == 2
-				startNewIndex = previousLine[4][0] < line[4][0]
 
 				currentIsNesting = type(line[1]) is list
 				previousIsNesting = type(previousLine[1]) is list
@@ -191,19 +192,18 @@ class Parser(threading.Thread):
 				# '\n' before beginning a new attribute type
 				# '\n' before first nesting
 				if previousIsSass and currentIsAttribute\
-					or previousIsAttribute and currentIsAttribute and startNewIndex\
+					or previousIsAttribute and currentIsAttribute and currentIsAttribute and previousLine[4][0] < line[4][0]\
 					or currentIsNesting and not previousIsNesting:
 					result += '\n'
 			if hasComment:
 				comment = lastValue
-				newLine = '\n' + indent
 				result += newLine + (newLine.join(comment[0]) if type(comment[0]) is list else comment[0])
-			result += ('\n' + indent) + line[0]
+			result += newLine + line[0]
 			if attributeValue is not None:
 				if type(attributeValue) is str:
 					result += ': ' + attributeValue + ';'
 				elif type(attributeValue) is list:
-					result += ' {\n' + self.format(attributeValue, depth + 1) + '\n' + indent + '}'
+					result += ' {\n' + self.format(attributeValue, depth + 1) + newLine + '}'
 					result += '\n' if i != len(ordered) - 1 else ''
 				else:
 					result += Parser.ADD[attributeValue]
@@ -238,10 +238,12 @@ class Parser(threading.Thread):
 							break
 						except:
 							pass
+					else:
+						line.append([len(self.ordering), 0])
 					attributes.append(line)
 			else:
 				if len(line[0]) > 1 and line[0][0] == '/' and (line[0][1] == '/' or line[0][1] == '*'):
-					# It's a comment, we want to link it to another comment, attribute or whatever
+					# It's a comment, we want to link it to another comment, attribute, nesting or sass
 					comments.append(line)
 				else:
 					# It's not an attribute, we want to keep the original order -> order on line number.
@@ -254,7 +256,7 @@ class Parser(threading.Thread):
 						selectedList.append(line)
 
 		# sorted() sorts the attributes based on their importance (index and orderNumber)
-		ordered = sass + sorted(attributes, key=lambda x: x[4]) + nestings
+		ordered = sass + sorted(sorted(attributes, key=lambda x: x[2]), key=lambda x: x[4]) + nestings
 		self.linkComments(comments, ordered)
 
 		return ordered
