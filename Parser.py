@@ -133,7 +133,7 @@ class Parser(threading.Thread):
 							if tempChar in [':', ';', '\'', '"']:
 								break
 
-						if isNesting:
+						if not isNesting:
 							if isKey:
 								isKey = False
 								(result, lastLine,) = self.addResult(result, lineLengths, lastLine, index, part)
