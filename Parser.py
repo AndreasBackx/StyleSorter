@@ -18,7 +18,12 @@ class Parser(threading.Thread):
 
 	def run(self):
 		parsed = self.parse()
-		self.callback(self.format(parsed))
+		formatted = None
+		try:
+			formatted = self.format(parsed)
+		except:
+			pass
+		self.callback(formatted)
 
 	def addResult(self, result, lineLengths, lastLine, end, key, value=None, originalValue=None):
 		'''
@@ -158,9 +163,6 @@ class Parser(threading.Thread):
 		'''
 		# self.order() orders recursively so if the depth > 0, the parsed data is already ordered
 		ordered = self.order(parsed) if depth == 0 else parsed
-
-		if depth == 0:
-			print(json.dumps(ordered, indent=4))
 
 		result = ''
 		indent = ''

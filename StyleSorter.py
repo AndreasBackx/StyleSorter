@@ -47,14 +47,17 @@ class StyleSorterSortCommand(sublime_plugin.TextCommand):
 			sublime.status_message(text)
 
 	def updateFile(self, formatted):
-		self.view.set_status(self.NAME, 'Updating stylesheet')
-		sel = self.view.sel()
-		sel.clear()
-		sel.add(self.region)
-		self.save(formatted)
+		if formatted is None:
+			sublime.status_message(self.NAME + ' failed to sort your stylesheet.')
+		else:
+			self.view.set_status(self.NAME, 'Updating stylesheet')
+			sel = self.view.sel()
+			sel.clear()
+			sel.add(self.region)
+			self.save(formatted)
 
-		self.view.erase_status(self.NAME)
-		sublime.status_message(self.NAME + ' successfully sorted your stylesheet.')
+			self.view.erase_status(self.NAME)
+			sublime.status_message(self.NAME + ' successfully sorted your stylesheet.')
 		sys.stdout.flush()
 
 	def save(self, text):
