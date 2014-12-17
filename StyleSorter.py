@@ -17,7 +17,7 @@ class StyleSorterSortCommand(sublime_plugin.TextCommand):
 		ordering = self.settings.get(self.SETTINGS_ORDERING)
 
 		syntaxOrExt, syntax = self.getSyntax()
-		if syntax not in self.settings.get(self.SETTINGS_EXTENSIONS):
+		if syntax.lower() not in self.settings.get(self.SETTINGS_EXTENSIONS):
 			self.notify('The file\'s %s \'%s\' is disabled for sorting.' % (syntaxOrExt, syntax))
 			return
 
@@ -56,7 +56,7 @@ class StyleSorterSortCommand(sublime_plugin.TextCommand):
 		sublime.status_message(self.NAME + ' successfully sorted your stylesheet.')
 
 	def save(self, text):
-		auto_indent = self.view.settings().get('auto_indent')
+		auto_indent = self.view.settings().get('auto_indent', False)
 		if auto_indent:
 			self.view.settings().set('auto_indent', False)
 		self.view.run_command('insert', {'characters': text})
