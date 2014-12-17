@@ -1,5 +1,17 @@
 {
-	// How to order
+	// Enable for the following file extensions:
+	"extensions": [
+		"scss",
+		"css"
+	],
+
+	// For the first time show a popup if true, else a status message for notifications.
+	"extension_reset": true,
+
+	// Always show a popup
+	"extension_popup": false,
+
+	// Ordering types
 	"ordering": [
 		[
 			"position",
