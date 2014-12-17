@@ -64,6 +64,6 @@ class StyleSorterSortCommand(sublime_plugin.TextCommand):
 		auto_indent = self.view.settings().get('auto_indent', False)
 		if auto_indent:
 			self.view.settings().set('auto_indent', False)
-		self.view.run_command('insert', {'characters': text})
+		self.view.run_command('replace_file', {'text': text})
 		if auto_indent:
 			self.view.settings().set('auto_indent', True)
