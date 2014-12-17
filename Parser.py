@@ -78,6 +78,8 @@ class Parser(threading.Thread):
 
 		# A nesting with a double colon is being parsed
 		doubleColon = False
+		# A nesting with a colon is being parsed
+		isNesting = False
 
 		lineLengths = []
 		lines = style.split('\n')
@@ -85,6 +87,7 @@ class Parser(threading.Thread):
 		for key, line in enumerate(lines):
 			lineLengths.append(len(line) + 1 if key == 0 else len(line) + lineLengths[key - 1] + 1)
 
+		# Don't count the last \n
 		lineLengths[len(lineLengths) - 1] -= 1
 		length = lineLengths[len(lineLengths) - 1]
 
@@ -121,10 +124,20 @@ class Parser(threading.Thread):
 					if style[index + 1] == ':' or style[index - 1] == ':':
 						doubleColon = True
 					else:
-						if isKey:
-							isKey = False
-							(result, lastLine,) = self.addResult(result, lineLengths, lastLine, index, part)
-						reset = True
+						tempChar = ''
+						for t in range(index, len(style), 1):
+							tempChar = style[t]
+							if tempChar == '{':
+								isNesting = True
+								break
+							if tempChar in [':', ';', '\'', '"']:
+								break
+
+						if isNesting:
+							if isKey:
+								isKey = False
+								(result, lastLine,) = self.addResult(result, lineLengths, lastLine, index, part)
+							reset = True
 				elif char == ';':
 					# @imports, @extends, etc. are keys while attribute values are dict values
 					if isKey:
@@ -134,6 +147,7 @@ class Parser(threading.Thread):
 						isKey = True
 					reset = True
 				elif char == '{':
+					isNesting = False
 					doubleColon = False
 					depth += 1
 					part = part.strip()
