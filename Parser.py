@@ -1,5 +1,4 @@
 import threading
-import copy
 import json
 
 
@@ -239,35 +238,34 @@ class Parser(threading.Thread):
 		return ordered
 
 	def linkComments(self, comments, ordered):
-		sortedComments = sorted(comments, key=lambda x: x[2])
-		resultComments = copy.deepcopy(sortedComments)
+		comments = sorted(comments, key=lambda x: x[2])
 
-		for c in range(len(sortedComments) - 1, -1, -1):
-			comment = sortedComments[c]
+		for c in range(len(comments) - 1, -1, -1):
+			comment = comments[c]
 			if c > 0:
-				previousComment = sortedComments[c - 1]
+				previousComment = comments[c - 1]
 
 				previousEnd = previousComment[3]
 				currentStart = comment[2]
 
 				# The current comment is linked to the next one
 				if currentStart - 1 <= previousEnd <= currentStart:
-					addComment = resultComments.pop(c)
+					addComment = comments.pop(c)
 					previousComment[0] += '\n' if currentStart - 1 == previousEnd else ''
 					previousComment[0] += addComment[0]
 					previousComment[3] = addComment[3]
 					continue
-			resultComments[c] = comment
+			comments[c] = comment
 
 		for o in range(len(ordered) - 1, -1, -1):
 			order = ordered[o]
 			if o > 0:
 				orderStart = order[2]
-				for c in range(len(resultComments) - 1, -1, -1):
-					comment = resultComments[c]
+				for c in range(len(comments) - 1, -1, -1):
+					comment = comments[c]
 					commentEnd = comment[3]
 					if orderStart - 1 <= commentEnd <= orderStart:
-						comment = resultComments.pop(c)
+						comment = comments.pop(c)
 						order.append(comment)
 						break
 
