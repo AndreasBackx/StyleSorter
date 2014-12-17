@@ -7,15 +7,17 @@ class StyleSorterSortCommand(sublime_plugin.TextCommand):
 
 	NAME = 'StyleSorter'
 
+	SETTINGS_ORDERING = 'ordering'
+	SETTINGS_EXTENSIONS = 'extensions'
 	SETTINGS_POPUP = 'extension_popup'
 	SETTINGS_RESET = 'extension_reset'
 
 	def run(self, edit):
 		self.settings = sublime.load_settings(self.NAME + '.sublime-settings')
-		ordering = self.settings.get('ordering')
+		ordering = self.settings.get(self.SETTINGS_ORDERING)
 
 		syntaxOrExt, syntax = self.getSyntax()
-		if syntax not in self.settings.get('extensions'):
+		if syntax not in self.settings.get(self.SETTINGS_EXTENSIONS):
 			self.notify('The file\'s %s \'%s\' is disabled for sorting.' % (syntaxOrExt, syntax))
 			return
 
