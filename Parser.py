@@ -8,6 +8,8 @@ class Parser(threading.Thread):
 
 	ADD = ['', ';']
 
+	SASS_SPECIFIC_PREFIXES = ['$', '@']
+
 	def __init__(self, lines, ordering, callback):
 		self.lines = lines
 		self.ordering = ordering
@@ -195,26 +197,27 @@ class Parser(threading.Thread):
 			length = len(line)
 			lastValue = line[length - 1]
 			hasComment = type(lastValue) is list and len(lastValue) > 2
+			currentIsSass = line[0][0] in Parser.SASS_SPECIFIC_PREFIXES
 			if i > 0:
 				previousLine = ordered[i - 1]
 				previousLength = len(previousLine)
-				lastPreviousValue = previousLine[previousLength - 1]
 
-				previousHadComment = type(lastPreviousValue) is list and len(lastPreviousValue) > 2
-				previousIsSass = previousLength <= (5 if previousHadComment else 4)
+				previousIsSass = previousLine[0][0] in Parser.SASS_SPECIFIC_PREFIXES
 
 				previousIsAttribute = previousLength > 4 and len(previousLine[4]) == 2
 				currentIsAttribute = length > 4 and len(line[4]) == 2
 
-				currentIsNesting = type(line[1]) is list
+				currentIsNesting = type(attributeValue) is list
 				previousIsNesting = type(previousLine[1]) is list
 
 				# '\n' after @' or '$'
 				# '\n' before beginning a new attribute type
-				# '\n' before first nesting
-				if previousIsSass and currentIsAttribute\
+				# '\n' before first nesting, no '\n' before nested '@'
+				# '\n' before nesting after sass
+				if previousIsSass and (currentIsAttribute and not currentIsSass)\
 					or previousIsAttribute and currentIsAttribute and currentIsAttribute and previousLine[4][0] < line[4][0]\
-					or currentIsNesting and not previousIsNesting:
+					or currentIsNesting and not previousIsNesting and not (currentIsSass and previousIsSass)\
+					or not currentIsSass and currentIsNesting and previousIsSass:
 					result += '\n'
 			if hasComment:
 				comment = lastValue
@@ -223,9 +226,9 @@ class Parser(threading.Thread):
 			if attributeValue is not None:
 				if type(attributeValue) is str:
 					result += ': ' + attributeValue + ';'
-				elif type(attributeValue) is list:
+				elif type(attributeValue) is list:  # isNesting
 					result += ' {\n' + self.format(attributeValue, depth + 1) + newLine + '}'
-					result += '\n' if i != len(ordered) - 1 else ''
+					result += '\n' if i != len(ordered) - 1 and not currentIsSass else ''
 				else:
 					result += Parser.ADD[attributeValue]
 		return result[1:]  # Strip the first '\n'
