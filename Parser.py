@@ -130,7 +130,7 @@ class Parser(threading.Thread):
 							if tempChar == '{':
 								isNesting = True
 								break
-							if tempChar in [';', '\'', '"']:
+							if tempChar == ';':
 								break
 
 						if not isNesting:
