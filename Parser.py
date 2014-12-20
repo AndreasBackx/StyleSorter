@@ -1,4 +1,5 @@
 import threading
+import traceback
 
 
 class Parser(threading.Thread):
@@ -22,8 +23,9 @@ class Parser(threading.Thread):
 		formatted = None
 		try:
 			formatted = self.format(parsed)
-		except:
-			pass
+		except Exception as e:
+			trace = traceback.format_exc()
+			print(trace)
 		self.callback(formatted)
 
 	def addResult(self, result, lineLengths, lastLine, end, key, value=None, originalValue=None):
@@ -240,7 +242,8 @@ class Parser(threading.Thread):
 			- The current attributes are moved towards the top
 		'''
 		nestings = []
-		sass = []
+		# The first list in sass contains variables, the second one stuff with an '@' prefix
+		sass = [[], []]
 		attributes = []
 		comments = []
 
@@ -253,6 +256,7 @@ class Parser(threading.Thread):
 			if type(content) is str:
 				# We want to get the importance of attributes and later sort them based on those
 				if line[0][0] == '$':
+					self.lineNumberSort(line, sass[0], lineNumber)
 					sass.append(line)
 				else:
 					for orderNumber, order in enumerate(self.ordering):
@@ -271,19 +275,24 @@ class Parser(threading.Thread):
 					comments.append(line)
 				else:
 					# It's not an attribute, we want to keep the original order -> order on line number.
-					selectedList = sass if line[0][0] == '@' else nestings
-					for i, l in enumerate(selectedList):
-						if l[2] >= lineNumber:
-							selectedList.insert(i, line)
-							break
-					else:
-						selectedList.append(line)
+					selectedList = sass[1] if line[0][0] == '@' else nestings
+					self.lineNumberSort(line, selectedList, lineNumber)
+
+		sass = sass[0] + sass[1]
 
 		# sorted() sorts the attributes based on their importance (index and orderNumber)
 		ordered = sass + sorted(sorted(attributes, key=lambda x: x[2]), key=lambda x: x[4]) + nestings
 		self.linkComments(comments, ordered)
 
 		return ordered
+
+	def lineNumberSort(self, line, lines, lineNumber):
+		for i, l in enumerate(lines):
+			if l[2] >= lineNumber:
+				lines.insert(i, line)
+				break
+		else:
+			lines.append(line)
 
 	def linkComments(self, comments, ordered):
 		'''
