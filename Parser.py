@@ -23,9 +23,8 @@ class Parser(threading.Thread):
 		formatted = None
 		try:
 			formatted = self.format(parsed)
-		except Exception as e:
-			trace = traceback.format_exc()
-			print(trace)
+		except:
+			print(traceback.format_exc())
 		self.callback(formatted)
 
 	def addResult(self, result, lineLengths, lastLine, end, key, value=None, originalValue=None):
@@ -223,7 +222,8 @@ class Parser(threading.Thread):
 					result += '\n'
 			if hasComment:
 				comment = lastValue
-				result += newLine + (newLine.join(comment[0]) if type(comment[0]) is list else comment[0])
+				formatComment = lambda c: newLine.join([formatComment(item) if type(item) is list else item for item in c]) if type(c) is list else c
+				result += newLine + formatComment(comment[0])
 			result += newLine + line[0]
 			if attributeValue is not None:
 				if type(attributeValue) is str:
@@ -322,12 +322,11 @@ class Parser(threading.Thread):
 
 		for o in range(len(ordered) - 1, -1, -1):
 			order = ordered[o]
-			if o > 0:
-				orderStart = order[2]
-				for c in range(len(comments) - 1, -1, -1):
-					comment = comments[c]
-					commentEnd = comment[3]
-					if orderStart - 1 <= commentEnd <= orderStart:
-						comment = comments.pop(c)
-						order.append(comment)
-						break
+			orderStart = order[2]
+			for c in range(len(comments) - 1, -1, -1):
+				comment = comments[c]
+				commentEnd = comment[3]
+				if orderStart - 1 <= commentEnd <= orderStart:
+					comment = comments.pop(c)
+					order.append(comment)
+					break
