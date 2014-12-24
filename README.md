@@ -4,7 +4,7 @@ CSS and SCSS attribute type sorter for Sublime Text 3.
 Feel free to fork the repository or issue any suggestions or bugs.
 
 ##Preview
-![StyleSorter in action](http://i.imgur.com/nUEWD9v.gif)
+![StyleSorter in action](http://i.imgur.com/rlfRMoR.gif)
 
 ##Installation
 ###Package Manager
