@@ -1,16 +1,16 @@
-#StyleSorter
+# StyleSorter
 CSS and SCSS attribute type sorter for Sublime Text 3.
 
 Feel free to fork the repository or issue any suggestions or bugs.
 
-##Preview
+## Preview
 ![StyleSorter in action](http://i.imgur.com/rlfRMoR.gif)
 
-##Installation
-###Package Manager
+## Installation
+### Package Manager
 Search for `StyleSorter`, press enter and you're done!
 
-###Manual
+### Manual
 1. Change the directory of your console to the location of your Sublime Text 3 packages. The location of this folder can be found by clicking on:
 	* Windows and Linux		`Preferences -> Browse Packages...`
 	* OS X					`Sublime Text -> Preferences -> Browse Packages...`
@@ -19,7 +19,7 @@ Search for `StyleSorter`, press enter and you're done!
 git clone https://github.com/AndreasBackx/StyleSorter.git
 ```
 
-##License
+## License
 StyleSorter, a CSS and SCSS attribute type sorter for Sublime Text 3.
 
 Copyright (C) 2014  Andreas Backx
