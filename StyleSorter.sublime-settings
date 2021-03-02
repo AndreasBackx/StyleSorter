@@ -2,7 +2,8 @@
 	// Enable for the following file extensions:
 	"extensions": [
 		"scss",
-		"css"
+		"css",
+		"less"
 	],
 
 	// For the first time show a popup if true, else a status message for notifications.
